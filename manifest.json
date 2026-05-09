@@ -1,0 +1,8 @@
+{
+  "name": "Менеджер об'єктів",
+  "short_name": "Об'єкти",
+  "start_url": "https://sergey090909ooo.github.io/telegram-webapp/",
+  "display": "standalone",
+  "background_color": "#1c1c1e",
+  "theme_color": "#007aff"
+}
