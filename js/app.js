@@ -23,7 +23,6 @@ const cementArea = document.getElementById('cementArea');
 const slopes = document.getElementById('slopes');
 const totalAmount = document.getElementById('totalAmount');
 const plastererInfo = document.getElementById('plastererInfo');
-const plastererName = document.getElementById('plastererName');
 const plastererAssigned = document.getElementById('plastererAssigned');
 const plastererAssignedName = document.getElementById('plastererAssignedName');
 const takeWorkBtn = document.getElementById('takeWorkBtn');
@@ -95,13 +94,10 @@ function updateProgressBar(obj) {
     progressBarFill.style.width = pct + '%';
     progressDetail.textContent = `Виконано ${done} із ${plan} од.`;
 
-    // Колір залежно від строку
     if (obj.deadline && plan > 0) {
         const now = new Date();
         const deadline = new Date(obj.deadline);
         const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        const neededPct = plan > 0 ? ((daysLeft > 0 ? (100 - pct) / daysLeft : 100)) : 0;
-
         if (pct >= 100) {
             progressBarFill.style.background = '#34c759';
             deadlineStatus.innerHTML = '✅ Об\'єкт завершено!';
@@ -110,18 +106,21 @@ function updateProgressBar(obj) {
             progressBarFill.style.background = '#ff3b30';
             deadlineStatus.innerHTML = '🔴 Строк минув!';
             deadlineStatus.style.color = '#ff3b30';
-        } else if (neededPct > 10) {
-            progressBarFill.style.background = '#ff3b30';
-            deadlineStatus.innerHTML = `🔴 Відстає! Залишилось ${daysLeft} дн., треба ~${Math.round(neededPct)}%/день`;
-            deadlineStatus.style.color = '#ff3b30';
-        } else if (neededPct > 5) {
-            progressBarFill.style.background = '#ff9500';
-            deadlineStatus.innerHTML = `🟡 У графіку. ${daysLeft} дн.`;
-            deadlineStatus.style.color = '#ff9500';
         } else {
-            progressBarFill.style.background = '#34c759';
-            deadlineStatus.innerHTML = `🟢 Випереджає графік! ${daysLeft} дн.`;
-            deadlineStatus.style.color = '#34c759';
+            const neededPct = (100 - pct) / daysLeft;
+            if (neededPct > 10) {
+                progressBarFill.style.background = '#ff3b30';
+                deadlineStatus.innerHTML = `🔴 Відстає! ${daysLeft} дн.`;
+                deadlineStatus.style.color = '#ff3b30';
+            } else if (neededPct > 5) {
+                progressBarFill.style.background = '#ff9500';
+                deadlineStatus.innerHTML = `🟡 У графіку. ${daysLeft} дн.`;
+                deadlineStatus.style.color = '#ff9500';
+            } else {
+                progressBarFill.style.background = '#34c759';
+                deadlineStatus.innerHTML = `🟢 Випереджає! ${daysLeft} дн.`;
+                deadlineStatus.style.color = '#34c759';
+            }
         }
     } else {
         progressBarFill.style.background = '#007aff';
@@ -145,8 +144,13 @@ function renderObjects() {
         const pct = plan > 0 ? Math.min(100, Math.round((done / plan) * 100)) : 0;
         let statusHtml = '';
         if (pct >= 100) statusHtml = '<span class="object-status status-done">🟢 Завершено</span>';
-        else if (obj.plastererName) statusHtml = '<span class="object-status status-in-progress">🟡 В роботі</span>';
+        else if (obj.plastererContact) statusHtml = '<span class="object-status status-in-progress">🟡 В роботі</span>';
         else statusHtml = '<span class="object-status status-new">🔵 Новий</span>';
+
+        let plastererHtml = '';
+        if (obj.plastererContact) {
+            plastererHtml = `<div style="font-size:12px;color:#8e8e93;margin-top:2px;">🛠️ ${esc(obj.plastererContact.first_name || '')} ${esc(obj.plastererContact.last_name || '')} | 📞 ${esc(obj.plastererContact.phone || '')}</div>`;
+        }
 
         card.innerHTML = `
             <div class="object-card-header">
@@ -155,10 +159,10 @@ function renderObjects() {
             </div>
             <div class="object-address">📍 ${esc(obj.address)}</div>
             <div class="object-customer">👤 ${esc(obj.customerName || '—')} | 📞 ${esc(obj.customerPhone || '—')}</div>
-            ${obj.plastererName ? `<div style="font-size:12px;color:#8e8e93;margin-top:2px;">🛠️ ${esc(obj.plastererName)}</div>` : ''}
+            ${plastererHtml}
             <div style="margin-top: 6px;">
                 <div class="progress-bar-bg" style="height: 6px;">
-                    <div class="progress-bar-fill" style="width: ${pct}%; background: ${pct >= 100 ? '#34c759' : obj.plastererName ? '#ff9500' : '#007aff'}; height: 100%; border-radius: 3px;"></div>
+                    <div class="progress-bar-fill" style="width: ${pct}%; background: ${pct >= 100 ? '#34c759' : obj.plastererContact ? '#ff9500' : '#007aff'}; height: 100%; border-radius: 3px;"></div>
                 </div>
                 <span style="font-size: 11px; color: #8e8e93;">${done}/${plan} од. (${pct}%)</span>
             </div>
@@ -190,22 +194,74 @@ function openObject(obj) {
     slopes.value = obj.slopes || 0;
     updateTotal();
 
-    if (obj.plastererName) {
-        plastererInfo.style.display = 'none';
+    if (obj.plastererContact) {
         plastererAssigned.style.display = 'block';
-        plastererAssignedName.textContent = obj.plastererName;
+        plastererAssignedName.innerHTML = `✅ 🛠️ ${esc(obj.plastererContact.first_name || '')} ${esc(obj.plastererContact.last_name || '')} | 📞 ${esc(obj.plastererContact.phone || '')}`;
+        plastererInfo.style.display = 'none';
         takeWorkBtn.style.display = 'none';
         progressBtn.style.display = 'block';
     } else {
-        plastererInfo.style.display = 'none';
         plastererAssigned.style.display = 'none';
-        takeWorkBtn.style.display = 'block';
+        plastererInfo.style.display = 'block';
+        plastererInfo.innerHTML = `
+            <button class="button button-secondary" id="shareContactBtn" style="margin-top: 8px;">
+                <span>📞 Поділитися контактом</span>
+            </button>
+            <div style="font-size: 11px; color: #8e8e93; margin-top: 4px;">Натисніть, щоб відправити свій контакт Telegram</div>
+        `;
+        // Вішаємо обробник на кнопку після створення
+        setTimeout(() => {
+            const btn = document.getElementById('shareContactBtn');
+            if (btn) {
+                btn.onclick = () => requestPlastererContact();
+            }
+        }, 100);
+        takeWorkBtn.style.display = 'none';
         progressBtn.style.display = 'none';
     }
 
     mainScreen.style.display = 'none';
     formScreen.style.display = 'block';
     progressScreen.style.display = 'none';
+}
+
+// ==================== ЗАПИТ КОНТАКТУ ШТУКАТУРА ====================
+function requestPlastererContact() {
+    if (tg.requestContact) {
+        tg.requestContact((success, eventData) => {
+            if (success && eventData) {
+                savePlastererContact(eventData);
+            }
+        });
+    } else if (tg.showAlert) {
+        tg.showAlert('Функція доступна тільки в Telegram');
+    } else {
+        alert('Функція доступна тільки в Telegram. Відкрийте через бота.');
+    }
+}
+
+function savePlastererContact(contactData) {
+    const objects = loadObjects();
+    const obj = objects.find(o => o.id === editingObjectId);
+    if (!obj) return;
+
+    obj.plastererContact = {
+        user_id: contactData.user_id || contactData.id,
+        first_name: contactData.first_name || '',
+        last_name: contactData.last_name || '',
+        phone: contactData.phone_number || contactData.phone || '',
+    };
+    obj.plastererName = `${contactData.first_name || ''} ${contactData.last_name || ''}`.trim();
+    obj.updatedAt = new Date().toISOString();
+    saveObjects(objects);
+
+    // Оновити відображення
+    plastererAssigned.style.display = 'block';
+    plastererAssignedName.innerHTML = `✅ 🛠️ ${esc(obj.plastererName)} | 📞 ${esc(obj.plastererContact.phone || '')}`;
+    plastererInfo.style.display = 'none';
+    progressBtn.style.display = 'block';
+    renderObjects();
+    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 }
 
 // ==================== ДОДАТИ НОВИЙ ====================
@@ -222,20 +278,13 @@ document.getElementById('addObjectBtn').onclick = () => {
     cementArea.value = '';
     slopes.value = '';
     totalAmount.textContent = '0';
-    plastererInfo.style.display = 'none';
     plastererAssigned.style.display = 'none';
+    plastererInfo.style.display = 'none';
     takeWorkBtn.style.display = 'none';
     progressBtn.style.display = 'none';
     mainScreen.style.display = 'none';
     formScreen.style.display = 'block';
     progressScreen.style.display = 'none';
-};
-
-// ==================== ВЗЯТИ В РОБОТУ ====================
-takeWorkBtn.onclick = () => {
-    plastererInfo.style.display = 'block';
-    plastererAssigned.style.display = 'none';
-    takeWorkBtn.style.display = 'none';
 };
 
 // ==================== ЗБЕРЕГТИ ====================
@@ -261,7 +310,6 @@ document.getElementById('saveBtn').onclick = () => {
         doneGypsum: 0,
         doneCement: 0,
         doneSlopes: 0,
-        plastererName: plastererName.value.trim() || '',
         pricePerUnit: 0,
     };
 
@@ -275,17 +323,16 @@ document.getElementById('saveBtn').onclick = () => {
             data.doneCement = objects[idx].doneCement || 0;
             data.doneSlopes = objects[idx].doneSlopes || 0;
             data.pricePerUnit = objects[idx].pricePerUnit || 0;
-            if (data.plastererName && !objects[idx].plastererName) {
-                data.plastererName = data.plastererName;
-            } else {
-                data.plastererName = objects[idx].plastererName || data.plastererName;
-            }
+            data.plastererContact = objects[idx].plastererContact || null;
+            data.plastererName = objects[idx].plastererName || '';
             objects[idx] = data;
         }
     } else {
         data.id = Date.now();
         data.createdAt = now;
         data.updatedAt = now;
+        data.plastererContact = null;
+        data.plastererName = '';
         objects.unshift(data);
     }
     saveObjects(objects);
@@ -323,7 +370,6 @@ document.getElementById('saveProgressBtn').onclick = () => {
     const g = parseFloat(todayGypsum.value) || 0;
     const c = parseFloat(todayCement.value) || 0;
     const s = parseFloat(todaySlopes.value) || 0;
-    const extra = parseFloat(extraWorkPrice.value) || 0;
     obj.doneGypsum = (obj.doneGypsum || 0) + g;
     obj.doneCement = (obj.doneCement || 0) + c;
     obj.doneSlopes = (obj.doneSlopes || 0) + s;
@@ -355,9 +401,11 @@ document.getElementById('backFromProgressBtn').onclick = () => {
     const objects = loadObjects();
     const obj = objects.find(o => o.id === currentProgressObjectId);
     if (obj) {
-        plastererAssigned.style.display = obj.plastererName ? 'block' : 'none';
-        plastererAssignedName.textContent = obj.plastererName || '';
-        progressBtn.style.display = obj.plastererName ? 'block' : 'none';
+        if (obj.plastererContact) {
+            plastererAssigned.style.display = 'block';
+            plastererAssignedName.innerHTML = `✅ 🛠️ ${esc(obj.plastererContact.first_name || '')} ${esc(obj.plastererContact.last_name || '')} | 📞 ${esc(obj.plastererContact.phone || '')}`;
+        }
+        progressBtn.style.display = obj.plastererContact ? 'block' : 'none';
     }
 };
 
