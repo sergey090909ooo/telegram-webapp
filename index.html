@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Telegram Mini App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="user-card">
+            <div class="user-name" id="userNamePlaceholder">Загрузка...</div>
+            <div class="user-id" id="userIdPlaceholder"></div>
+        </div>
+        <div class="counter-card">
+            <div class="counter-label">Количество</div>
+            <div class="counter-value" id="counter">0</div>
+        </div>
+        <button class="button" id="incrementBtn">➕ Плюс</button>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
