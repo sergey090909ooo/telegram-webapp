@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>менеджер об'єктів</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="container">
+            <!-- ГОЛОВНИЙ ЕКРАН -->
+            <div id="mainScreen">
+                <div class="header">
+                    <span class="header-title">менеджер об'єктів</span>
+                </div>
+                <button class="button" id="addObjectBtn">
+                    <span class="button-icon">＋</span>
+                    <span>Додати об'єкт</span>
+                </button>
+                <div id="objectsList"></div>
+            </div>
+
+            <!-- ПАСПОРТ ОБ'ЄКТА -->
+            <div id="formScreen" style="display: none;">
+                <div class="header">
+                    <span class="header-title" id="formTitle">Паспорт об'єкта</span>
+                </div>
+                <div class="form-card">
+                    <label class="form-label">👤 Ім'я замовника</label>
+                    <input type="text" class="form-input" id="customerName" placeholder="Введіть ім'я">
+
+                    <label class="form-label">📞 Номер телефону</label>
+                    <input type="tel" class="form-input" id="customerPhone" placeholder="+380...">
+
+                    <label class="form-label">📍 Адреса об'єкта</label>
+                    <input type="text" class="form-input" id="objectAddress" placeholder="Вулиця, будинок, місто">
+
+                    <label class="form-label">📅 Строк виконання (до)</label>
+                    <input type="date" class="form-input" id="objectDeadline">
+
+                    <label class="form-label">💬 Коментар до об'єкта</label>
+                    <textarea class="form-input form-textarea" id="customerComment" placeholder="Додаткові нотатки..."></textarea>
+
+                    <div class="section-divider"></div>
+                    <div class="section-title">🔧 Технічні характеристики</div>
+
+                    <label class="form-label">🧱 Гіпсова штукатурка (м²)</label>
+                    <input type="number" class="form-input number-input" id="gypsumArea" placeholder="0" min="0" step="0.1">
+
+                    <label class="form-label">🏗️ Цементна штукатурка (м²)</label>
+                    <input type="number" class="form-input number-input" id="cementArea" placeholder="0" min="0" step="0.1">
+
+                    <label class="form-label">📐 Відкоси (пог. м)</label>
+                    <input type="number" class="form-input number-input" id="slopes" placeholder="0" min="0" step="0.1">
+
+                    <div class="total-block">
+                        <span class="total-label">📊 Загальний обсяг робіт:</span>
+                        <span class="total-value" id="totalAmount">0</span>
+                    </div>
+
+                    <!-- Призначення штукатура -->
+                    <div class="section-divider"></div>
+                    <div class="section-title">🛠️ Штукатур</div>
+                    <div id="plastererInfo" style="display: none;">
+                        <label class="form-label">👤 Ім'я штукатура</label>
+                        <input type="text" class="form-input" id="plastererName" placeholder="Введіть ім'я">
+                    </div>
+                    <button class="button button-secondary" id="takeWorkBtn" style="margin-top: 8px;">
+                        <span>🛠️ Взяти в роботу</span>
+                    </button>
+                    <div id="plastererAssigned" style="display: none; margin-top: 12px;">
+                        <span style="color: #34c759; font-size: 14px;">✅ Призначено: <strong id="plastererAssignedName"></strong></span>
+                    </div>
+                </div>
+                <button class="button" id="saveBtn">
+                    <span id="saveBtnText">Зберегти</span>
+                </button>
+                <button class="button" id="progressBtn" style="background: #ff9500; box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3); display: none;">
+                    <span>📊 Калькулятор штукатура</span>
+                </button>
+                <button class="button button-secondary" id="backBtn">
+                    <span>← Назад</span>
+                </button>
+            </div>
+
+            <!-- КАЛЬКУЛЯТОР ШТУКАТУРА -->
+            <div id="progressScreen" style="display: none;">
+                <div class="header">
+                    <span class="header-title">Калькулятор штукатура</span>
+                </div>
+                <div class="form-card">
+                    <div style="margin-bottom: 16px;">
+                        <span style="font-size: 14px; color: #8e8e93;">📍 Об'єкт:</span>
+                        <span style="font-size: 16px; font-weight: 600; color: #ffffff; display: block;" id="progressObjectAddress"></span>
+                    </div>
+
+                    <label class="form-label">💰 Ціна за одиницю (грн)</label>
+                    <input type="number" class="form-input" id="pricePerUnit" placeholder="180" min="0" step="0.01">
+
+                    <div class="section-divider"></div>
+                    <div class="section-title">📅 Сьогоднішній обсяг</div>
+
+                    <label class="form-label">🧱 Гіпсова (м²)</label>
+                    <input type="number" class="form-input number-input" id="todayGypsum" placeholder="0" min="0" step="0.1">
+
+                    <label class="form-label">🏗️ Цементна (м²)</label>
+                    <input type="number" class="form-input number-input" id="todayCement" placeholder="0" min="0" step="0.1">
+
+                    <label class="form-label">📐 Відкоси (пог. м)</label>
+                    <input type="number" class="form-input number-input" id="todaySlopes" placeholder="0" min="0" step="0.1">
+
+                    <div class="section-divider"></div>
+                    <div class="section-title">➕ Додаткові роботи</div>
+
+                    <label class="form-label">Назва роботи</label>
+                    <input type="text" class="form-input" id="extraWorkName" placeholder="Наприклад: ґрунтовка">
+
+                    <label class="form-label">Сума (грн)</label>
+                    <input type="number" class="form-input" id="extraWorkPrice" placeholder="0" min="0" step="0.01">
+
+                    <!-- Підсумок за сьогодні -->
+                    <div class="total-block" style="margin-top: 16px;">
+                        <div>
+                            <span class="total-label">📐 Обсяг сьогодні:</span>
+                            <span class="total-value" id="todayVolume" style="font-size: 20px;">0</span>
+                            <span style="font-size: 12px; color: #8e8e93;"> од.</span>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <span class="total-label">💵 Сума за сьогодні:</span>
+                            <span class="total-value" id="todaySum" style="font-size: 24px; color: #34c759;">0</span>
+                            <span style="font-size: 12px; color: #8e8e93;"> грн</span>
+                        </div>
+                    </div>
+
+                    <!-- Прогрес-бар об'єкта -->
+                    <div style="margin-top: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="font-size: 13px; color: #8e8e93;">📊 Загальний прогрес</span>
+                            <span style="font-size: 13px; font-weight: 600; color: #ffffff;" id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+                        </div>
+                        <div style="font-size: 11px; color: #8e8e93; margin-top: 4px;" id="progressDetail"></div>
+                        <div style="font-size: 11px; margin-top: 4px; font-weight: 500;" id="deadlineStatus"></div>
+                    </div>
+                </div>
+                <button class="button" id="saveProgressBtn">
+                    <span>Зберегти прогрес</span>
+                </button>
+                <button class="button button-secondary" id="backFromProgressBtn">
+                    <span>← Назад до об'єкта</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
